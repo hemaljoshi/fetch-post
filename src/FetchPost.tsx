@@ -1,141 +1,98 @@
-import React, { useEffect, useState } from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import { Pagination, Paper, TextField, Box } from '@mui/material';
-import { Container, Grid } from '@mui/material';
-import PostModal from './PostModal';
+import React from 'react';
+import { Container, Grid, Typography, Box } from '@mui/material';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 interface FetchPostProps {
   postData: any[];
-  paginationCount: number;
-  paginationCurrentPage: number;
-  searchData: string;
-  dataPerPage: number;
-  open: boolean;
-  handleCurentPageChange: (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => void;
-  fetchPageCount: (data: any) => void;
-  handleSearchChange: (
-    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) => void;
-  sortPostData: (col: string) => void;
-  handleClose: () => void;
-  handleOpen: () => void;
   onRowSelect: (obj: any) => void;
-  selectedPostData: {};
+  getData: () => void;
+  hasMore: boolean;
 }
 
 const FetchPost: React.FC<FetchPostProps> = ({
   postData,
-  handleCurentPageChange,
-  paginationCount,
-  paginationCurrentPage,
-  fetchPageCount,
-  searchData,
-  handleSearchChange,
-  dataPerPage,
-  sortPostData,
-  open,
-  handleClose,
   onRowSelect,
-  selectedPostData,
+  getData,
+  hasMore,
 }) => {
-  const filteredPostData = postData?.filter((row: any) => {
-    if (searchData === '') {
-      return row;
-    }
-    if (
-      row?.title?.toLowerCase().includes(searchData.toLowerCase()) ||
-      row?.url?.toLowerCase().includes(searchData.toLowerCase()) ||
-      row?.author?.toLowerCase().includes(searchData.toLowerCase())
-    ) {
-      return row;
-    }
+  const columns: GridColDef[] = [
+    {
+      field: 'id',
+      headerName: 'ID',
+      width: 50,
+      sortable: false,
+    },
+    {
+      field: 'title',
+      headerName: 'Title',
+      width: 160,
+    },
+    {
+      field: 'url',
+      headerName: 'URL',
+      width: 420,
+      sortable: false,
+    },
+    {
+      field: 'author',
+      headerName: 'Author',
+      width: 160,
+      sortable: false,
+    },
+    {
+      field: 'created_at',
+      headerName: 'Created at',
+      width: 160,
+    },
+  ];
+
+  const rows = postData?.map((posts: any, ind: number) => {
+    return {
+      id: ind,
+      title: posts.title,
+      url: posts.url,
+      author: posts.author,
+      created_at: posts.created_at,
+    };
   });
 
-  fetchPageCount(filteredPostData);
-
-  const PostModalProps = {
-    open,
-    handleClose,
-    selectedPostData,
-  };
   return (
     <Container maxWidth='lg'>
       <Grid container>
-        <Grid item lg={12} md={12} sm={12} xs={12} padding={2}>
-          <Box>
-            <TextField
-              label='Search...'
-              value={searchData}
-              onChange={handleSearchChange}
-            />
-          </Box>
-        </Grid>
-      </Grid>
-      <Grid container>
-        <Grid item lg={12} md={12} sm={12} xs={12} padding={2}>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell onClick={() => sortPostData('title')}>
-                    Title
-                  </TableCell>
-                  <TableCell>URL</TableCell>
-                  <TableCell onClick={() => sortPostData('created_at')}>
-                    Created Date
-                  </TableCell>
-                  <TableCell>Author</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredPostData
-                  ?.slice(
-                    dataPerPage * (paginationCurrentPage - 1),
-                    dataPerPage * paginationCurrentPage
-                  )
-                  .map((row: any, index: number) => (
-                    <TableRow key={index} onClick={() => onRowSelect(row)}>
-                      <TableCell
-                        component='th'
-                        scope='row'
-                        style={{ width: 100 }}
-                      >
-                        {row.title}
-                      </TableCell>
-                      <TableCell style={{ width: 20 }}>{row.url}</TableCell>
-                      <TableCell style={{ width: 100 }}>
-                        {row.created_at}
-                      </TableCell>
-                      <TableCell style={{ width: 100 }}>{row.author}</TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Grid>
-      </Grid>
-      <Grid container>
-        <Grid item lg={12} md={12} sm={12} xs={12}>
-          <Pagination
-            count={paginationCount}
-            page={paginationCurrentPage}
-            shape='rounded'
+        <Grid item lg={12} md={12} sm={12} xs={12} padding={3}>
+          <Box
             sx={{
-              padding: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
             }}
-            onChange={handleCurentPageChange}
-          />
+          >
+            <Typography
+              variant='h5'
+              sx={{ mb: 3, fontWeight: 700 }}
+              color='primary'
+            >
+              Post Data
+            </Typography>
+          </Box>
+
+          <InfiniteScroll
+            dataLength={rows.length}
+            next={getData}
+            hasMore={hasMore}
+            loader={''}
+          >
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              onRowClick={onRowSelect}
+              rowsPerPageOptions={[100]}
+              autoHeight={true}
+            />
+          </InfiniteScroll>
         </Grid>
       </Grid>
-      <PostModal {...PostModalProps} />
     </Container>
   );
 };
