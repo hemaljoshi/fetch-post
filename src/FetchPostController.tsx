@@ -17,8 +17,8 @@ const FetchPostController = () => {
         `https://hn.algolia.com/api/v1/search_by_date?tags=story&page=${currentPage}`
       )
       .then((response: any) => {
-        setHasMore(currentPage < totalPage ? true : false);
         totalPage = response.data.nbPages;
+        setHasMore(currentPage < totalPage ? true : false);
         let tempData: any[] = [];
         tempData = response.data.hits;
         setPostData((prev) => prev.concat(tempData));
@@ -34,7 +34,7 @@ const FetchPostController = () => {
   useEffect(() => {
     getData();
     const interval = setInterval(() => {
-      ((currentPage < totalPage) && (hasMore === true)) && getData();
+      currentPage < totalPage && hasMore === true && getData();
       return () => {
         clearInterval(interval);
       };
